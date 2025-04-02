@@ -6,7 +6,6 @@ import {
   getPreferenceValues,
   showToast,
   Toast,
-  Detail,
   openExtensionPreferences,
   Icon,
 } from "@raycast/api";
@@ -74,16 +73,17 @@ export default function Command() {
         url.searchParams.append("per", per.toString());
       }
       
-      const logUrl = url.toString().replace(accessToken, "ACCESS_TOKEN_HIDDEN");
-      console.log("Sending request to:", logUrl);
-      
+      // Make the API request
       const response = await fetch(url.toString());
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`API request failed with status ${response.status}`);
-        console.error("Error response:", errorText);
         setIsLoading(false);
+        await showToast({
+          style: Toast.Style.Failure,
+          title: `API Error (${response.status})`,
+          message: errorText || "Failed to fetch images from Gyazo",
+        });
         return [];
       }
       
@@ -140,58 +140,6 @@ export default function Command() {
         message: "You've reached the end of the results",
       });
     }
-  };
-
-  // 詳細表示用の関数
-  const showImageDetails = (image: GyazoImage) => {
-    const formattedDate = new Date(image.created_at).toLocaleString();
-    const title = image.metadata?.title || "Untitled Image";
-    
-    const ocrText = image.ocr?.description ? `\n\n### OCR Text\n${image.ocr.description}` : "";
-    
-    const metadataItems = [];
-    if (image.metadata?.app) metadataItems.push(`App: ${image.metadata.app}`);
-    if (image.metadata?.url) metadataItems.push(`Source URL: ${image.metadata.url}`);
-    if (image.metadata?.desc) metadataItems.push(`Description: ${image.metadata.desc}`);
-    
-    const metadataText = metadataItems.length > 0 ? `\n\n### Metadata\n${metadataItems.join("\n")}` : "";
-    
-    const markdown = `
-    # ${title}
-    
-    ![${title}](${image.url})
-    
-    ### Details
-    - **ID**: ${image.image_id}
-    - **Type**: ${image.type}
-    - **Created**: ${formattedDate}
-    - **URL**: ${image.url}
-    - **Permalink**: ${image.permalink_url}
-    ${metadataText}
-    ${ocrText}
-    `;
-    
-    return (
-      <Detail
-        markdown={markdown}
-        navigationTitle={title}
-        actions={
-          <ActionPanel>
-            <Action.CopyToClipboard
-              title="Copy Permalink to Clipboard"
-              content={image.permalink_url}
-              onCopy={() => {
-                showToast({
-                  style: Toast.Style.Success,
-                  title: "Permalink Copied to Clipboard",
-                });
-              }}
-            />
-            <Action.OpenInBrowser url={image.permalink_url} />
-          </ActionPanel>
-        }
-      />
-    );
   };
 
   return (
@@ -255,16 +203,6 @@ export default function Command() {
                     });
                   }}
                   shortcut={{ modifiers: ["cmd"], key: "enter" }}
-                />
-                <Action
-                  title="View Details"
-                  icon={Icon.Eye}
-                  onAction={() => {
-                    const detailView = showImageDetails(image);
-                    if (detailView) {
-                      return detailView;
-                    }
-                  }}
                 />
                 <Action.OpenInBrowser
                   title="Open in Browser"
