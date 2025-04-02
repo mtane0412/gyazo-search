@@ -72,10 +72,10 @@ export default function Command() {
         url.searchParams.append("page", page.toString());
         url.searchParams.append("per", per.toString());
       }
-      
+
       // Make the API request
       const response = await fetch(url.toString());
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         setIsLoading(false);
@@ -86,7 +86,7 @@ export default function Command() {
         });
         return [];
       }
-      
+
       const data = await response.json();
       setIsLoading(false);
       return data as GyazoImage[];
@@ -204,10 +204,7 @@ export default function Command() {
                   }}
                   shortcut={{ modifiers: ["cmd"], key: "enter" }}
                 />
-                <Action.OpenInBrowser
-                  title="Open in Browser"
-                  url={image.permalink_url}
-                />
+                <Action.OpenInBrowser title="Open in Browser" url={image.permalink_url} />
                 <Action
                   title="Load More Images"
                   icon={Icon.Plus}
